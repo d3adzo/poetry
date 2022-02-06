@@ -1,5 +1,5 @@
 obj-m := starter.o
-starter-objs := start.o stop.o inc/helper.o
+starter-objs := start.o stop.o inc/syscall.o
 ccflags-y := -I$(src)/inc/
 
 all:

