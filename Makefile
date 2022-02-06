@@ -1,4 +1,4 @@
-obj-m := starter.o
+obj-m := poet.o
 starter-objs := start.o stop.o inc/syscall.o
 ccflags-y := -I$(src)/inc/
 

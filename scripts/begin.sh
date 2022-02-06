@@ -1,7 +1,7 @@
 echo "++MAKING++"
 make
 echo "++INSERT KO++"
-insmod starter.ko
+insmod poet.ko
 echo "++READING MODULES++"
 head /proc/modules 
 echo "++WAIT++"

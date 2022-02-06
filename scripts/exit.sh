@@ -1,5 +1,5 @@
 echo "++RM MOD++"
-rmmod starter.ko
+rmmod poet.ko
 echo "++MAKE++"
 make clean
 echo "++LOG++"
