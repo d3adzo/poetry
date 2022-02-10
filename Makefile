@@ -1,9 +1,12 @@
 obj-m := poet.o
-starter-objs := start.o stop.o inc/syscall.o
-ccflags-y := -I$(src)/inc/
+poet-objs := main.o
+CC = gcc -Wall 
+KDIR := /lib/modules/$(shell uname -r)/build
+PWD := $(shell pwd)
+ccflags-y := -I$(src)/ftrace_hook
 
-all:
-	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules
+poet:
+	$(MAKE) -C $(KDIR) M=$(PWD) modules
 
 clean:
-	make -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean
+	$(MAKE) -C $(KDIR) M=$(PWD) clean
