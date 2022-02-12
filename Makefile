@@ -3,7 +3,7 @@ poet-objs := main.o
 CC = gcc -Wall 
 KDIR := /lib/modules/$(shell uname -r)/build
 PWD := $(shell pwd)
-ccflags-y := -I$(src)/ftrace_hook
+ccflags-y += -I$(src)/inc
 
 poet:
 	$(MAKE) -C $(KDIR) M=$(PWD) modules
