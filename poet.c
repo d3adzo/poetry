@@ -57,11 +57,13 @@ static unsigned int my_nf_hookfn(void *priv,
         size = htons(ip_header->tot_len) - sizeof(_iph) - tcp_header->doff*4;
         _data = kmalloc(size, GFP_KERNEL);
 
-			if (!_data)
-				return NF_ACCEPT;
+        if (!_data)
+            return NF_ACCEPT;
+
         _data = kmalloc(size, GFP_KERNEL);
         user_data = skb_header_pointer(skb, ip_header->ihl*4 + tcp_header->doff*4, size, &_data);
-        if(!user_data){
+        if(!user_data)
+        {
             printk(KERN_INFO "NULL INFO");
             kfree(_data);
             return NF_ACCEPT;
