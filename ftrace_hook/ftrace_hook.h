@@ -3,6 +3,8 @@
  *
  * Copyright (c) 2018 ilammy
  */
+#ifndef FTRACE_HEADER
+#define FTRACE_HEADER
 
 #define pr_fmt(fmt) "ftrace_hook: " fmt
 
@@ -182,3 +184,5 @@ void fh_remove_hooks(struct ftrace_hook *hooks, size_t count)
 		.function = (_function),	\
 		.original = (_original),	\
 	}
+
+#endif

