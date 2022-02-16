@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"syscall"
+	"flag"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
@@ -63,6 +64,23 @@ func buildUDPPacket(dst, src *net.UDPAddr) ([]byte, error) {
 }
 
 func main() {
+	var iFace string
+	var target string
+	var command string
+
+    flag.StringVar(&iFace, "iFace", "ens33", "local ethernet interface")
+    flag.StringVar(&target, "target", "127.0.0.1", "target IP")
+    flag.StringVar(&command, "command", "ens33", "local ethernet interface")
+
+
+
+    flag.Parse()
+
+    fmt.Printf("++++ Sending \"%s\" to: %s", command, target)
+    fmt.Println("tail:", flag.Args())
+
+
+
 	conn, err := open("lo")
 	if err != nil {
 		panic(err)
@@ -80,3 +98,4 @@ func main() {
 		panic(err)
 	}
 	fmt.Printf("Sent IP packet %d bytes to %s\n", wlen, dst)
+}
