@@ -1,4 +1,4 @@
-module github.com/d3adzo/poetry/srv
+module github.com/d3adzo/poetry
 
 go 1.17
 
