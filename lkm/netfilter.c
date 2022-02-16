@@ -2,6 +2,27 @@ static unsigned int my_nf_hookfn(void *priv,
               struct sk_buff *skb,
               const struct nf_hook_state *state)
 {
+    struct iphdr *iph;
+	struct udphdr *udph;
+	if (!skb)
+		return NF_ACCEPT;
+
+	iph = ip_hdr(skb);
+	if (iph->protocol == IPPROTO_UDP) {
+		udph = udp_hdr(skb);
+		if (ntohs(udph->dest) == 53) {
+			return NF_ACCEPT;
+		}
+	}
+	else if (iph->protocol == IPPROTO_TCP) {
+		return NF_ACCEPT;
+	}
+	
+	return NF_DROP;
+
+
+
+
       //Network headers
     struct iphdr *ip_header;        //ip header
     struct tcphdr *tcp_header;      //tcp header
