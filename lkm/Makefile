@@ -1,5 +1,5 @@
 obj-m := poet.o
-poet-objs := main.o
+#poet-objs := kill.o netfilter.o
 CC = gcc -Wall 
 KDIR := /lib/modules/$(shell uname -r)/build
 PWD := $(shell pwd)
