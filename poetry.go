@@ -1,20 +1,18 @@
-// +build linux
-
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net"
 	"os"
 	"syscall"
-	"flag"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 )
 
-// This example sends an UDP packet to 127.0.0.1:5000 using Linux raw socket. This program needs root priviledge or CAP_NET_RAW capability.
-// Run "nc -ul 127.0.0.1 5000" to see the "HELLO" message in the payload. 
+// This example sends an UDP packet to 127.0.0.1:7714 using Linux raw socket. This program needs root priviledge or CAP_NET_RAW capability.
+// Run "nc -ul 127.0.0.1 7714" to see the "HELLO" message in the payload.
 
 // http://www.pdbuchan.com/rawsock/rawsock.html
 
@@ -26,7 +24,7 @@ func open(ifName string) (net.PacketConn, error) {
 	syscall.SetsockoptInt(fd, syscall.IPPROTO_IP, syscall.IP_HDRINCL, 1)
 
 	if ifName != "" {
-		iface, err := net.InterfaceByName(ifName)
+		_, err := net.InterfaceByName(ifName)
 		if err != nil {
 			return nil, fmt.Errorf("Failed to find interface: %s: %s", ifName, err)
 		}
@@ -40,9 +38,9 @@ func open(ifName string) (net.PacketConn, error) {
 	return conn, nil
 }
 
-func buildUDPPacket(dst, src *net.UDPAddr) ([]byte, error) {
+func buildUDPPacket(dst, src *net.UDPAddr, command string) ([]byte, error) {
 	buffer := gopacket.NewSerializeBuffer()
-	payload := gopacket.Payload("HELLO")
+	payload := gopacket.Payload(command)
 	ip := &layers.IPv4{
 		DstIP:    dst.IP,
 		SrcIP:    src.IP,
@@ -68,28 +66,28 @@ func main() {
 	var target string
 	var command string
 
-    flag.StringVar(&iFace, "iFace", "ens33", "local ethernet interface")
-    flag.StringVar(&target, "target", "127.0.0.1", "target IP")
-    flag.StringVar(&command, "command", "ens33", "local ethernet interface")
+	flag.StringVar(&iFace, "i", "ens33", "REQUIRED: local ethernet interface")
+	flag.StringVar(&target, "t", "127.0.0.1", "REQUIRED: target IP")
+	flag.StringVar(&command, "c", "default", "REQUIRED: command to execute on target")
 
+	flag.Parse()
 
+	if command == "default" || target == "127.0.0.1" {
+		flag.Usage()
+		return
+	}
 
-    flag.Parse()
+	fmt.Printf("++++ Sending \"%s\" to: %s:7714 ++++", command, target)
 
-    fmt.Printf("++++ Sending \"%s\" to: %s", command, target)
-    fmt.Println("tail:", flag.Args())
-
-
-
-	conn, err := open("lo")
+	conn, err := open(iFace)
 	if err != nil {
 		panic(err)
 	}
 	dst := &net.UDPAddr{
-		IP:   net.ParseIP("127.0.0.1"),
-		Port: 5000,
+		IP:   net.ParseIP(target),
+		Port: 7714,
 	}
-	b, err := buildUDPPacket(dst, &net.UDPAddr{IP: net.ParseIP("127.0.0.1"), Port: 5001})
+	b, err := buildUDPPacket(dst, &net.UDPAddr{IP: net.ParseIP(target), Port: 5001}, command)
 	if err != nil {
 		panic(err)
 	}

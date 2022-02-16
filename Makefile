@@ -2,10 +2,7 @@ DIRECTORY=bin
 LINUX=linux-agent
 FLAGS=-ldflags "-s -w"
 
-all: clean create-directory poetry
-
-create-directory:
-	mkdir ${DIRECTORY}
+all: clean poetry
 
 poetry: 
 	echo "Compiling static Linux binary"
