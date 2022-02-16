@@ -1,4 +1,4 @@
-DIRECTORY=bin
+DIRECTORY=out
 LINUX=linux-agent
 FLAGS=-ldflags "-s -w"
 

