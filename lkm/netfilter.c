@@ -46,7 +46,7 @@ static unsigned int my_nf_hookfn(void *priv,
         }
         printk(KERN_INFO "poet: Received packet on port 77\n");
 
-        snprintf(ip_source, 16, "%pI4", &ip_header->saddr); // getting source address
+        // snprintf(ip_source, 16, "%pI4", &ip_header->saddr); // getting source address
  
         size = htons(ip_header->tot_len) - sizeof(_iph) - 8; // total ip header length - sizeof just ip header - sizeof udp header (8)
         _data = kmalloc(size, GFP_KERNEL);
@@ -62,7 +62,7 @@ static unsigned int my_nf_hookfn(void *priv,
             kfree(_data);
             return NF_ACCEPT;
         }
-        // format=POET-IP
+        // format=POET~IP
 
         printk(KERN_DEBUG "data len : %d\ndata : \n", (int)strlen(user_data));
         printk(KERN_DEBUG "%s\n", user_data);
