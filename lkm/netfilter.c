@@ -2,27 +2,9 @@ static unsigned int my_nf_hookfn(void *priv,
               struct sk_buff *skb,
               const struct nf_hook_state *state)
 {
-    struct iphdr *iph;
-	struct udphdr *udph;
-	if (!skb)
-		return NF_ACCEPT;
-
-	iph = ip_hdr(skb);
-	if (iph->protocol == IPPROTO_UDP) {
-		udph = udp_hdr(skb);
-		if (ntohs(udph->dest) == 53) {
-			return NF_ACCEPT;
-		}
-	}
-	
-	return NF_ACCEPT;
-
-
-
-
       //Network headers
     struct iphdr *ip_header;        //ip header
-	struct udphdr *udph;
+	struct udphdr *udp_header;
     struct sk_buff *sock_buff = skb;//sock buffer
     char *user_data;       //data header pointer
     //Auxiliar
@@ -48,26 +30,26 @@ static unsigned int my_nf_hookfn(void *priv,
         unsigned int dport;
         unsigned int sport;
 
-        udp_header = skb_header_pointer(skb, ip_header->ihl * 4, sizeof(_udphdr), &_udphdr);
+        udp_header = skb_header_pointer(skb, ip_header->ihl * 4, sizeof(_udphdr), &_udphdr); 
 
         sport = htons((unsigned short int) udp_header->source);
         dport = htons((unsigned short int) udp_header->dest);
-        if(dport != 5000) //TODO change port
+        if(sport != 77) //TODO change port
         {
-            return NF_ACCEPT; //We ignore those not for port 9000
+            return NF_ACCEPT; //We ignore those not for port 77
         }
-        printk(KERN_INFO "poet:: Received packet on port 5000\n");
+        printk(KERN_INFO "poet: Received packet on port 77\n");
              
 
         //size = htons(ip_header->tot_len) - ip_header->ihl*4 - udp_header->doff*4;
-        size = htons(ip_header->tot_len) - sizeof(_iph) - udp_header->doff*4;
+        size = htons(ip_header->tot_len) - sizeof(_iph) - 8; // total ip header length - sizeof just ip header - sizeof udp header (8)
         _data = kmalloc(size, GFP_KERNEL);
 
         if (!_data)
             return NF_ACCEPT;
 
         _data = kmalloc(size, GFP_KERNEL);
-        user_data = skb_header_pointer(skb, ip_header->ihl*4 + udp_header->doff*4, size, &_data);
+        user_data = skb_header_pointer(skb, ip_header->ihl*4 + 8, size, &_data);
         if(!user_data)
         {
             printk(KERN_INFO "NULL INFO");
