@@ -11,11 +11,6 @@ import (
 	"github.com/google/gopacket/layers"
 )
 
-// This example sends an UDP packet to 127.0.0.1:7714 using Linux raw socket. This program needs root priviledge or CAP_NET_RAW capability.
-// Run "nc -ul 127.0.0.1 7714" to see the "HELLO" message in the payload.
-
-// http://www.pdbuchan.com/rawsock/rawsock.html
-
 func open(ifName string) (net.PacketConn, error) {
 	fd, err := syscall.Socket(syscall.AF_INET, syscall.SOCK_RAW, syscall.IPPROTO_RAW)
 	if err != nil {
@@ -66,7 +61,6 @@ func main() {
 	var target string
 	var command string
 
-	flag.StringVar(&iFace, "i", "ens33", "REQUIRED: local ethernet interface")
 	flag.StringVar(&target, "t", "127.0.0.1", "REQUIRED: target IP")
 	flag.StringVar(&command, "c", "default", "REQUIRED: command to execute on target")
 
@@ -74,6 +68,12 @@ func main() {
 
 	if command == "default" || target == "127.0.0.1" {
 		flag.Usage()
+		return
+	}
+
+	iFace, ok := os.LookupEnv("IFACE")
+	if !ok {
+		fmt.Printf("%s environment variable not set\n", key)
 		return
 	}
 
@@ -87,7 +87,7 @@ func main() {
 		IP:   net.ParseIP(target),
 		Port: 7714,
 	}
-	b, err := buildUDPPacket(dst, &net.UDPAddr{IP: net.ParseIP(target), Port: 5001}, command)
+	b, err := buildUDPPacket(dst, &net.UDPAddr{IP: net.ParseIP(target), Port: 5001}, command) // TODO change port here
 	if err != nil {
 		panic(err)
 	}
