@@ -174,15 +174,14 @@ func main() {
 	}
 	defer pc.Close()
 
-	addrChan := make(chan net.Addr)
-	var addr net.Addr
+	addrChan := make(chan net.Addr, 1)
 
 	go readBuffer(pc, addrChan)
 	for {
 		select {
 		case <-addrChan:
 			fmt.Printf("in addrchan\n")
-			addr = <-addrChan
+			addr := <-addrChan
 			dport := addr.(*net.UDPAddr).Port
 
 			deadline := time.Now().Add(60 * time.Second)
@@ -193,7 +192,7 @@ func main() {
 
 			fmt.Print("Command: ")
 			fmt.Scanf("%s", &command)
-			if command == "exit" { 
+			if command == "exit" {
 				return
 			}
 
@@ -201,7 +200,7 @@ func main() {
 
 			addrChan <- nil
 		default:
-			//do nothing
+			time.Sleep(1 * time.Second) // do nothing
 		}
 	}
 	return
