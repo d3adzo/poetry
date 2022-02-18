@@ -1,3 +1,4 @@
+![nil is goated](https://img.shields.io/badge/nil-goated-green)
 # Poetry
 This is a Linux kernel module rootkit made for >=5.13. It features privilege escalation, module hiding, and reverse shell capabilities. 
 
@@ -30,7 +31,7 @@ sudo -E ./poetry -t <target_ip> # -E passes the env vars to sudo
 
 ## Kernel Module
 ### Tested On:
-- 5.13.something
+- 5.13.0
 ### Building
 ```sh
 # install needed packages
