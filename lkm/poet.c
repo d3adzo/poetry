@@ -35,3 +35,5 @@ module_exit(rk_cleanup);
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("kindtime");
 MODULE_DESCRIPTION("Kernel Module");
+
+// sed -i 's/printk/\/\/printk/g' *.c --> Comment out print statements
