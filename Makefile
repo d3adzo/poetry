@@ -1,5 +1,4 @@
 DIRECTORY=out
-LINUX=linux-agent
 FLAGS=-ldflags "-s -w"
 
 all: clean poetry

