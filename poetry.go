@@ -177,7 +177,7 @@ func main() {
 	opener := "POET~" + target
 	sendUDPPacket(iFace, source, target, opener, 77, 7714)
 
-	listener, err := net.Listen("tcp", ":5858") // TODO change port
+	listener, err := net.Listen("tcp", source+":5858") // TODO change port
 	if err != nil {
 		log.Fatalln(err)
 	}
