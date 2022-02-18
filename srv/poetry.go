@@ -1,16 +1,17 @@
 package main
 
 import (
+	"embed"
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net"
 	"os"
 )
 
-// quill logo
+//go:embed art.txt
+var f embed.FS
 
 func tcp_con_handle(con net.Conn) {
 	chan_to_stdout := stream_copy(con, os.Stdout)
@@ -93,12 +94,13 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	b, err := ioutil.ReadFile("art.txt")
+
+	b, err := f.ReadFile("art.txt")
 	if err != nil {
 		panic(err)
 	}
 	fmt.Println(string(b))
-	
+
 	log.Println("Connected: ", con.RemoteAddr())
 
 	tcp_con_handle(con)
