@@ -55,3 +55,6 @@ The compiled LKM will be: `poet.ko`
 # install the kernel module on the system
 sudo insmod poet.ko 
 ```
+
+## References
+TODO add refs

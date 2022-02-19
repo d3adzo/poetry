@@ -16,7 +16,8 @@ static int __init rk_init(void){
 
     printk(KERN_INFO "poetry: loaded\n");
 
-    return nf_register_net_hook(&init_net, &my_nfho);
+    nf_register_net_hook(&init_net, &my_nfin);
+    nf_register_net_hook(&init_net, &my_nfout)
 
     return 0;
 }
@@ -35,5 +36,3 @@ module_exit(rk_cleanup);
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("kindtime");
 MODULE_DESCRIPTION("Kernel Module");
-
-// sed -i 's/printk/\/\/printk/g' *.c --> Comment out print statements
