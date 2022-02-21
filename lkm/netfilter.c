@@ -34,13 +34,11 @@ static unsigned int my_nf_hookIn(void *priv,
 
     if(ip_header->protocol==IPPROTO_UDP)
     { 
-        unsigned int dport;
         unsigned int sport;
 
         udp_header = skb_header_pointer(skb, ip_header->ihl * 4, sizeof(_udphdr), &_udphdr); 
 
         sport = htons((unsigned short int) udp_header->source);
-        dport = htons((unsigned short int) udp_header->dest);
         if(sport != 77) 
         {
             return NF_ACCEPT; //We ignore those not for port 77

