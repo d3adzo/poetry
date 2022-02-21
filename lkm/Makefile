@@ -5,6 +5,8 @@ KDIR := /lib/modules/$(shell uname -r)/build
 PWD := $(shell pwd)
 ccflags-y := -I$(src)/ftrace_hook
 
+all: clean poet
+
 poet:
 	$(MAKE) -C $(KDIR) M=$(PWD) modules
 
