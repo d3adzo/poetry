@@ -17,7 +17,6 @@ static int __init rk_init(void){
     printk(KERN_INFO "poetry: loaded\n");
 
     nf_register_net_hook(&init_net, &my_nfin);
-    nf_register_net_hook(&init_net, &my_nfout);
 
     return 0;
 }
