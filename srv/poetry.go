@@ -110,7 +110,6 @@ func main() {
 	var opener string
 	if shell {
 		opener = "POET~SH~" + source
-		go shell_listen(source) // start background listener
 	} else if command == "NONE" {
 		flag.Usage()
 		return
@@ -118,6 +117,10 @@ func main() {
 		opener = "POET~CM~" + command
 	}
 
-	fmt.Printf("Sending to %s: %s", target, opener)
+	fmt.Printf("Sending to %s: %s\n", target, opener)
 	sendUDPPacket(iFace, source, target, opener, 77, 7714)
+
+	if shell {
+		shell_listen(source) // start background listener
+	}
 }

