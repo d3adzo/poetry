@@ -8,6 +8,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"sync"
 )
 
 //go:embed art.txt
@@ -55,7 +56,8 @@ func stream_copy(src io.Reader, dst io.Writer) <-chan int {
 	return sync_channel
 }
 
-func shell_listen(source string) {
+func shell_listen(source string, wg *sync.WaitGroup) {
+	defer wg.Done()
 	listener, err := net.Listen("tcp", source+":7337")
 	if err != nil {
 		log.Fatalln(err)
@@ -108,8 +110,11 @@ func main() {
 	}
 
 	var opener string
+	wg := new(sync.WaitGroup)
 	if shell {
 		opener = "POET~SH~" + source
+		wg.Add(1)
+		go shell_listen(source, wg) // listen in background
 	} else if command == "NONE" {
 		flag.Usage()
 		return
@@ -120,7 +125,5 @@ func main() {
 	fmt.Printf("Sending to %s: %s\n", target, opener)
 	sendUDPPacket(iFace, source, target, opener, 77, 7714)
 
-	if shell {
-		shell_listen(source) // start background listener
-	}
+	wg.Wait()
 }
