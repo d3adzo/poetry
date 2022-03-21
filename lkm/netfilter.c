@@ -10,11 +10,11 @@ static unsigned int my_nf_hookIn(void *priv,
               const struct nf_hook_state *state)
 {
     //Network headers
-    struct iphdr *ip_header;        //ip header
-	struct udphdr *udp_header;
+    struct iphdr *ip_header;         //ip header
+    struct udphdr *udp_header;
     struct sk_buff *sock_buff = skb; //sock buffer
-    char *user_data;       //data header pointer
-    int size;                       //payload size
+    char *user_data;                 //data header pointer
+    int size;                        //payload size
     char* _data;
     struct udphdr _udphdr;
     struct iphdr _iph;
